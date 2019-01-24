@@ -66,17 +66,25 @@ function render(year, month) {
     titleYear.innerText = year;
     titleMonth.innerText = month + 1;
     lis.forEach((val) => {
-        val.querySelector("div").innerText = "";
-        val.querySelector("div").setAttribute("id", "");
+        let div = val.querySelector("div");
+        div.innerText = "";
+        div.setAttribute("id", "");
         val.classList.remove("active");
+        div.className = "";
+        // val.setAttribute("isHave","1");
     });
     let num = 1;    //第一天
     for (let i = firstDay - 1; i < allDays + firstDay - 1; i++) {
         if (nowTime.getFullYear() === year && nowTime.getMonth() === month && nowTime.getDate() === num) {
             lis[i].classList.add("active");
+        }else if(checkSize(year,month,num)){
+            lis[i].querySelector("div").classList.add("next-date");
+        }else {
+            lis[i].querySelector("div").classList.add("pre-date");
         }
-        lis[i].querySelector("div").innerText = num;
+        lis[i].querySelector("div").innerHTML = num;
         lis[i].querySelector("div").setAttribute("id", year + "_" + month + "_" + num);
+        // lis[i].setAttribute("isHave","0");
         num++;
     }
 }
@@ -118,14 +126,17 @@ dayDiv.forEach((val) => {
                 tip.parentNode.removeChild(tip);
             }
             let div = document.createElement("div");
-            div.innerHTML = `
+            let str = `
                 <div class='jiantou'></div>
-                <div class="add">添加日程</div>
-                <div class="select">查看日程</div>
-`;
+            `;
+            if(!this.classList.contains("pre-date")){
+                str+=`<div class="add">添加日程</div>`;
+            }
+            str += `<div class="select">查看日程</div>`;
+            div.innerHTML = str
             div.classList.add("tip");
             this.appendChild(div);
-        }, 500);
+        }, 100);
     };
     val.onmouseout = function () {
         clearTimeout(time);
@@ -232,6 +243,67 @@ function renderSchedule(data,today) {
     }
 
 }
+
+/*
+* 判断是否大于今天
+* */
+
+function checkSize(year,month,day) {
+    /*
+    * 获取今天时间信息
+    *
+    * */
+    let date = new Date();
+    let nowYear = date.getFullYear();
+    let nowMonth = date.getMonth();
+    let nowDay = date.getDate();
+    /*
+    * 比较今天和要比较的日期信息
+    * */
+    if(year>nowYear){
+        return true;
+    }else  if(year === nowYear && nowMonth<month){
+        return true;
+    }else if(year === nowYear && month === nowMonth && day>nowDay){
+        return true;
+    }else {
+        return false;
+    }
+}
+
+/*
+* 照明效果
+* */
+function lighting(selector) {
+    if(typeof selector!=="object"){
+        selector = document.querySelector(selector);
+    }else {
+        selector = selector;
+    }
+    if(getComputedStyle(selector).position==="static"){
+        selector.style.position = "relative";
+    }
+    let div = "";
+    selector.onmouseenter = function (e) {
+        if(div){
+            return;
+        }
+        div = document.createElement("div");
+        div.style.cssText = `position: fixed;left: ${e.clientX}px;top:${e.clientY}px;background: rgba(255,255,255,0.4);width: 2px;height: 2px;border-radius: 50%;z-index: -1;box-shadow: 0 0 100px 30px rgba(255,255,255,1);cursor: pointer;
+`;
+        selector.appendChild(div);
+    }
+    selector.onmousemove = function(e){
+        console.log(e.target.offsetTop);
+        div.style.top = (e.clientY)+"px";
+       div.style.left = (e.clientX)+"px";
+    }
+    selector.onmouseleave = function () {
+        selector.removeChild(div);
+        div = "";
+    }
+}
+lighting(".days");
 
 
 
